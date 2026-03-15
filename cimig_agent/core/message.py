@@ -1,8 +1,8 @@
-from typing import Optional, Iterator, List, Dict, Union, Any, AsyncIterator
+from typing import Optional, Dict, Any, Literal
 from datetime import datetime
 from pydantic import BaseModel
 
-MessageRole = Union["system", "user", "assistant", "tool"]
+MessageRole = Literal["user", "assistant", "system", "tool", "summary"]
 
 class Message(BaseModel):
 

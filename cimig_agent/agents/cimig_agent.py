@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 
 from ..core.config import Config
-from ..agents import Agent
+from ..core import Agent
 from ..core import CIMIGAgentsLLM
 from ..tools.registry import ToolRegistry
 from ..core.message import Message
@@ -52,22 +52,38 @@ class CimigAgent(Agent):
             system_prompt: str = None,
             config: Optional[Config] = None,
             tool_registry: Optional[ToolRegistry] = None,
-            enable_tool_calling: bool = True,
             max_step: int = 5,
             ):
         super().__init__(
             name,
             llm,
             system_prompt or DEFAULT_REACT_SYSTEM_PROMPT,
-            config,
             tool_registry=tool_registry or ToolRegistry(),
         )
         self.max_step = max_step
         self.builtin_tools = ["Thought", "Finish"]  
-    
+
+        from ..tools.builtin.check_workflow_result import CheckWorkResult
+        from ..tools.builtin.get_wrong_log import GetWrongLog
+        from ..tools.builtin.git_commit import GitCommit
+        from ..tools.builtin.read_tool import ReadTool
+        from ..tools.builtin.write_tool import WriteTool
+
+        # checktools = CheckWorkResult()
+        # getwronglogs = GetWrongLog()
+        # gitcommit = GitCommit()
+        readtool = ReadTool()
+        writetool = WriteTool()
+
+        # self.add_tool(checktools)
+        # self.add_tool(getwronglogs)
+        # self.add_tool(gitcommit)
+        self.add_tool(readtool)
+        self.add_tool(writetool)
+
+
     def add_tool(self, tool):
         self.tool_registry.register_tool(tool)
-
 
     def run(self, input_text: str, **kwargs) -> str:
 
@@ -84,28 +100,28 @@ class CimigAgent(Agent):
 
         except KeyboardInterrupt:
             # Ctrl+C 时自动保存
-            print("\n⚠️ 用户中断，自动保存会话...")
+            print("\n 用户中断，自动保存会话...")
             if self.session_store:
                 try:
                     filepath = self.save_session("session-interrupted")
-                    print(f"✅ 会话已保存: {filepath}")
+                    print(f"会话已保存: {filepath}")
                 except Exception as e:
-                    print(f"❌ 保存失败: {e}")
+                    print(f"保存失败: {e}")
             raise
 
         except Exception as e:
             # 错误时也尝试保存
-            print(f"\n❌ 发生错误: {e}")
+            print(f"\n 发生错误: {e}")
             if self.session_store:
                 try:
                     filepath = self.save_session("session-error")
-                    print(f"✅ 会话已保存: {filepath}")
+                    print(f"会话已保存: {filepath}")
                 except Exception as save_error:
-                    print(f"❌ 保存失败: {save_error}")
+                    print(f"保存失败: {save_error}")
             raise
 
     def _run_impl(self,input_text: str, session_start_time, **kwargs) -> str:
-        messages = self._build_message(input_text)
+        messages = self._build_messages(input_text)
         tool_schemas = self._build_tool_schemas()
 
         current_step = 0
@@ -119,7 +135,7 @@ class CimigAgent(Agent):
         
         print(f"{self.name}开始处理问题:{input_text}")
 
-        while current_step < self.max_steps:
+        while current_step < self.max_step:
             current_step += 1
             print(f"\n--- 第{current_step}step---")
 
@@ -166,7 +182,7 @@ class CimigAgent(Agent):
             if not tool_calls:
                 # 没有工具调用，直接返回文本响应
                 final_answer = response_message.content or "抱歉，我无法回答这个问题。"
-                print(f"💬 直接回复: {final_answer}")
+                print(f"直接回复: {final_answer}")
 
                 # 保存到历史记录
                 self.add_message(Message(input_text, "user"))
@@ -335,3 +351,76 @@ class CimigAgent(Agent):
             self.trace_logger.finalize()
 
         return final_answer
+    
+    def _build_messages(self, input_text: str) -> List[Dict[str, str]]:
+        """构建消息列表"""
+        messages = []
+
+        # 添加系统提示词
+        if self.system_prompt:
+            messages.append({
+                "role": "system",
+                "content": self.system_prompt
+            })
+
+        # 添加用户问题
+        messages.append({
+            "role": "user",
+            "content": input_text
+        })
+
+        return messages
+    
+    
+    def _build_tool_schemas(self) -> List[Dict[str, Any]]:
+        """构建工具 JSON Schema(包含内置工具和用户工具)
+
+        复用基类的 _build_tool_schemas()，并追加 ReAct 内置工具
+        """
+        schemas = []
+
+        # 1. 添加内置工具：Thought
+        schemas.append({
+            "type": "function",
+            "function": {
+                "name": "Thought",
+                "description": "分析问题，制定策略，记录推理过程。在需要思考时调用此工具。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "reasoning": {
+                            "type": "string",
+                            "description": "你的推理过程和分析"
+                        }
+                    },
+                    "required": ["reasoning"]
+                }
+            }
+        })
+
+        # 2. 添加内置工具：Finish
+        schemas.append({
+            "type": "function",
+            "function": {
+                "name": "Finish",
+                "description": "当你有足够信息得出结论时，使用此工具返回最终答案。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "answer": {
+                       "type": "string",
+                            "description": "最终答案"
+                        }
+                    },
+                    "required": ["answer"]
+                }
+            }
+        })
+
+
+        # 3. 添加用户工具（复用基类方法）
+        if self.tool_registry:
+            user_tool_schemas = super()._build_tool_schemas()
+            schemas.extend(user_tool_schemas)
+
+        return schemas

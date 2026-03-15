@@ -12,6 +12,11 @@ class Config(BaseModel):
     debug: bool = False
     log_level: str = "INFO"
 
+    min_retain_rounds: int = 10 
+    compression_threshold: float = 0.8
+    
+    session_enabled: bool = True  # 是否启用会话持久化
+    session_dir: str = "memory/sessions"  # 会话文件保存目录
     max_history_length: int = 100
 
     @classmethod

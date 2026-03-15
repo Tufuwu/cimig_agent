@@ -181,11 +181,12 @@ class CIMIGAgentsLLM:
     ) -> Any:
         
         call_kwargs = {
-            "temperature": kwargs.get("temperature", self.temperature),
-            "choice": tool_choice        
+            "temperature": kwargs.get("temperature", self.temperature)
+      
         }
         if self.max_tokens is not None:
             call_kwargs["max_tokens"] = self.max_tokens
         call_kwargs.update(kwargs)
 
         return self._adapter.invoke_with_tools(messages=messages, tools=tools, **call_kwargs)
+    

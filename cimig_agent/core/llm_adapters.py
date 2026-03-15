@@ -143,7 +143,7 @@ class OpenAIAdapter(BaseLLMAdapter):
         try:
             response = self._client.chat.completions.create(
                 model=self.model,
-                message=messages,
+                messages=messages,
                 tools=tools,
                 tool_choice=tool_choice,
                 **kwargs
