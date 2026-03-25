@@ -6,11 +6,11 @@ import re
 import zipfile
 import io
 from typing import Annotated
+import os
 
 @tool
 def get_github_actions_logs(
-    repo_path: Annotated[str, "Local path to the git repository"],
-    github_token: Annotated[str, "GitHub Personal Access Token (PAT)"]
+    repo_path: Annotated[str, "Local path to the git repository"]
 ) -> str:
     """
     Fetches the latest GitHub Actions run logs for a local Git repository.
@@ -35,7 +35,7 @@ def get_github_actions_logs(
     owner = owner_part.split('/')[-1] if '/' in owner_part else owner_part.split(':')[-1]
 
     # 3. Request GitHub API
-    headers = {"Authorization": f"token {github_token}", "Accept": "application/vnd.github+json"}
+    headers = {"Authorization": f"token {os.getenv("GITHUB_TOKEN")}", "Accept": "application/vnd.github+json"}
     runs_url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs"
     
     try:

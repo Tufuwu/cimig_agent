@@ -35,8 +35,7 @@ def run_migration(target_repo_path: str, github_token: str):
         "messages": [
             ("system", "You are a DevOps assistant. Expert in CI/CD migrations."),
             ("user", f"The Travis CI config is in '{target_repo_path}'. "
-                     f"Please migrate it to GitHub Actions and push the changes. "
-                     f"Use this token: {github_token}")
+                     f"Please migrate it to GitHub Actions and push the changes. ")
         ],
         "loop_count": 0,
         "repo_path": target_repo_path,
@@ -72,4 +71,4 @@ if __name__ == "__main__":
     if not os.path.exists(REPO_PATH):
         print(f"Error: Path {REPO_PATH} does not exist.")
     else:
-        run_migration(REPO_PATH, TOKEN)
+        run_migration(REPO_PATH)

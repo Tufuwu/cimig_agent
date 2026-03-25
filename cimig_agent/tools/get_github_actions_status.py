@@ -4,11 +4,11 @@ from langchain_core.tools import tool
 from typing import Annotated
 import requests
 import re
+import os
 
 @tool
 def get_github_actions_status(
-    repo_path: Annotated[str, "The local filesystem path to the git repository"],
-    github_token: Annotated[str, "GitHub Personal Access Token with repo/workflow scope"]
+    repo_path: Annotated[str, "The local filesystem path to the git repository"]
 ) -> str:
     """
     Checks the status and conclusion of the most recent GitHub Actions workflow run 
@@ -43,7 +43,7 @@ def get_github_actions_status(
     # 3. Query the GitHub API for workflow runs
     api_url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs"
     headers = {
-        "Authorization": f"token {github_token}",
+        "Authorization": f"token {os.getenv("GITHUB_TOKEN")}",
         "Accept": "application/vnd.github+json"
     }
 
