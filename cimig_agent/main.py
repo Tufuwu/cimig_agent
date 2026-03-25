@@ -66,7 +66,6 @@ def run_migration(target_repo_path: str, github_token: str):
 if __name__ == "__main__":
     # 配置你的环境变量或直接输入
     REPO_PATH = "./my-local-project"  # 你的本地仓库路径
-    TOKEN = os.getenv("GITHUB_TOKEN", "your_token_here")
     
     if not os.path.exists(REPO_PATH):
         print(f"Error: Path {REPO_PATH} does not exist.")

@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
-from langchain_core.tools import tool
 from typing import Annotated
+from langchain_core.tools import tool
 
 @tool
 def apply_change_and_push(

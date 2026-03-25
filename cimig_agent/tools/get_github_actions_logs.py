@@ -1,12 +1,12 @@
-from langchain_core.tools import tool
+import re
+import io
+import os
+import zipfile
+import requests
 import subprocess
 from pathlib import Path
-import requests
-import re
-import zipfile
-import io
 from typing import Annotated
-import os
+from langchain_core.tools import tool
 
 @tool
 def get_github_actions_logs(
@@ -53,11 +53,42 @@ def get_github_actions_logs(
         logs_resp = requests.get(logs_url, headers=headers, timeout=20)
         
         with zipfile.ZipFile(io.BytesIO(logs_resp.content)) as z:
-            logs = []
-            for name in z.namelist():
-                if name.endswith('.txt'):
-                    with z.open(name) as f:
-                        logs.append(f"FILE: {name}\n{f.read().decode('utf-8', errors='ignore')}")
-        return "\n".join(logs) if logs else "No text logs found."
+                logs = []
+                for name in z.namelist():
+                    if name.endswith('.txt'):
+                        with z.open(name) as f:
+                            # 读取并解码
+                            content = f.read().decode('utf-8', errors='ignore')
+                            # 执行过滤逻辑
+                            processed_content = filter_log_content(content)
+                            
+                            # 只有当该文件包含 ERROR 内容时才加入结果列表
+                            if processed_content.strip():
+                                logs.append(f"FILE: {name}\n{processed_content}")
     except Exception as e:
         return f"API Error: {str(e)}"
+
+
+def filter_log_content(raw_text):
+    timestamp_pattern = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s*')
+    lines = raw_text.splitlines()
+    extracted = []
+    start_collecting = False
+    
+    for line in lines:
+        # 1. 去除时间戳
+        clean_line = timestamp_pattern.sub('', line)
+        
+        # 2. 检查结束条件（不包含此行）
+        if "Post job cleanup." in clean_line:
+            break
+            
+        # 3. 检查开始条件（从第一个 ERROR: 开始）
+        if not start_collecting and "ERROR:" in clean_line:
+            start_collecting = True
+        
+        if start_collecting:
+            extracted.append(clean_line)
+    
+    return "\n".join(extracted)
+
