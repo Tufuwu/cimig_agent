@@ -6,14 +6,15 @@ authors = [
     {name = "wu",email = "wu@123.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "pytest (>=9.0.2,<10.0.0)",
     "pydantic (>=2.12.5,<3.0.0)",
     "python-dotenv (>=1.2.2,<2.0.0)",
     "openai (>=2.28.0,<3.0.0)",
     "fastapi (>=0.135.1,<0.136.0)",
-    "uvicorn[standard] (>=0.42.0,<0.43.0)"
+    "uvicorn[standard] (>=0.42.0,<0.43.0)",
+    "langchain (>=1.2.13,<2.0.0)"
 ]
 
 
