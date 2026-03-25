@@ -161,7 +161,60 @@ class Agent(ABC):
         if normalized in {"string", "number", "integer", "boolean", "array", "object"}:
             return normalized
         return "string"
-    
+
+    def _convert_parameter_types(self, tool_name: str, param_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """根据工具定义转换参数类型
+
+        Args:
+            tool_name: 工具名称
+            param_dict: 参数字典
+
+        Returns:
+            类型转换后的参数字典
+        """
+        if not self.tool_registry:
+            return param_dict
+
+        tool = self.tool_registry.get_tool(tool_name)
+        if not tool:
+            return param_dict
+
+        try:
+            tool_params = tool.get_parameters()
+        except Exception:
+            return param_dict
+
+        type_mapping = {param.name: param.type for param in tool_params}
+        converted: Dict[str, Any] = {}
+
+        for key, value in param_dict.items():
+            param_type = type_mapping.get(key)
+            if not param_type:
+                converted[key] = value
+                continue
+
+            try:
+                normalized = param_type.lower()
+                if normalized in {"number", "float"}:
+                    converted[key] = float(value)
+                elif normalized in {"integer", "int"}:
+                    converted[key] = int(value)
+                elif normalized in {"boolean", "bool"}:
+                    if isinstance(value, bool):
+                        converted[key] = value
+                    elif isinstance(value, (int, float)):
+                        converted[key] = bool(value)
+                    elif isinstance(value, str):
+                        converted[key] = value.lower() in {"true", "1", "yes"}
+                    else:
+                        converted[key] = bool(value)
+                else:
+                    converted[key] = value
+            except (TypeError, ValueError):
+                converted[key] = value
+
+        return converted
+
     def _execute_tool_call(self, tool_name: str, arguments: Dict[str, Any]) -> str:
         """
         执行工具调用并返回字符串结果

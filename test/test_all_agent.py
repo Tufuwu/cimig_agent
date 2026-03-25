@@ -22,9 +22,9 @@ class TestEnvironment:
                 llm=llm
                 )
             assert ciagent is not None
-            # ciagent.run("你好，请介绍一下自己")
+            ciagent.run("读出D:/vscode/3/CIFix/CIFix/resources/actions/js/x-profiler/xprofiler-console/fixed_file.yml的文件")
             # print(f"\n✅ LLM初始化成功",ciagent.tool_registry.get_all_tools)
-            print(ciagent.tool_registry.get_tool("read_tool").run_with_timing({"file_path":"D:/vscode/3/CIFix/CIFix/resources/actions/js/x-profiler/xprofiler-console/fixed_file.yml"}))
+            # print(ciagent.tool_registry.get_tool("read_tool").run_with_timing({"file_path":"D:/vscode/3/CIFix/CIFix/resources/actions/js/x-profiler/xprofiler-console/fixed_file.yml"}))
         except Exception as e:
             pytest.fail(f"LLM初始化失败: {e}")
 

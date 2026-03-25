@@ -61,7 +61,7 @@ class CimigAgent(Agent):
             tool_registry=tool_registry or ToolRegistry(),
         )
         self.max_step = max_step
-        self.builtin_tools = ["Thought", "Finish"]  
+        self._builtin_tools = ["Thought", "Finish"]  
 
         from ..tools.builtin.check_workflow_result import CheckWorkResult
         from ..tools.builtin.get_wrong_log import GetWrongLog
@@ -424,3 +424,24 @@ class CimigAgent(Agent):
             schemas.extend(user_tool_schemas)
 
         return schemas
+    
+    def _handle_builtin_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """处理内置工具调用"""
+        if tool_name == "Thought":
+            reasoning = arguments.get("reasoning", "")
+            return {
+                "content": f"推理: {reasoning}",
+                "finished": False
+            }
+        elif tool_name == "Finish":
+            answer = arguments.get("answer", "")
+            return {
+                "content": f"最终答案: {answer}",
+                "finished": True,
+                "final_answer": answer
+            }
+        else:
+            return {
+                "content": f"未知的内置工具: {tool_name}",
+                "finished": False
+            }

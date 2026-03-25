@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 
 from ..base import Tool, ToolParameters
 from ..response import ToolResponse
+from ..errors import ToolErrorCode
 
 class WriteTool(Tool):
     
@@ -24,11 +25,16 @@ class WriteTool(Tool):
         content = parameter.get("content","")
 
         if not file_path:
-            return
+            return ToolResponse.error(
+                code=ToolErrorCode.INVALID_PARAM,
+                message="path can not empty"
+            )
         
         if not content:
-            return
-        
+            return ToolResponse.error(
+                code=ToolErrorCode.NOT_FOUND,
+                message="content not found"
+            )
         print(f"try to save {file_path}")
 
         try:
@@ -36,7 +42,7 @@ class WriteTool(Tool):
             file_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, mode='w', encoding='utf-8',errors='ignore') as file:
                 file.write(content)
-                print(f'已将内容写入到 {file_path}')
+                print(f'write content to {file_path}')
             return ToolResponse.success(
                 text=f"save result:success"
             )

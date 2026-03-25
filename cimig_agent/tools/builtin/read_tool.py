@@ -24,7 +24,7 @@ class ReadTool(Tool):
         if not file_path:
             return ToolResponse.error(
                 code=ToolErrorCode.INVALID_PARAM,
-                message="计算表达式不能为空"
+                message="path can not empty"
             )
 
         
@@ -36,7 +36,7 @@ class ReadTool(Tool):
                 return
             with open(file_path, mode='r', encoding='utf-8',errors='ignore') as file:
                 content = file.read()
-                print(f'已读取内容从 {file_path}')
+                print(f'read content from {file_path}')
 
             return ToolResponse.success(
                 text=f"read result:success",
@@ -47,7 +47,7 @@ class ReadTool(Tool):
             }
             )
         except Exception as e:
-            error_msg = f"读取失败: {str(e)}"
+            error_msg = f"read failed: {str(e)}"
             print(f"❌ {error_msg}")
             return ToolResponse.error(
                 code=ToolErrorCode.EXECUTION_ERROR,
